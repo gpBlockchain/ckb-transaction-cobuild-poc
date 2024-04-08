@@ -1,9 +1,9 @@
-import { blockchain } from "@ckb-lumos/base";
-import { molecule } from "@ckb-lumos/codec";
-import { RPC, Transaction } from "@ckb-lumos/lumos";
-import { ParamsFormatter } from "@ckb-lumos/rpc";
-import { writeFile } from 'fs';
-import { config } from './tmConfig';
+import {blockchain} from "@ckb-lumos/base";
+import {molecule} from "@ckb-lumos/codec";
+import {RPC, Transaction} from "@ckb-lumos/lumos";
+import {ParamsFormatter} from "@ckb-lumos/rpc";
+import {writeFile} from 'fs';
+import {config} from './tmConfig';
 
 // This function accepts a transaction object and converts this transaction
 // object into a tx.json file supported by ckb-debugger.
@@ -16,6 +16,7 @@ export async function txDump(tx: Transaction, path: string) {
         'cell_deps': [],
         'header_deps': []
     }
+    tx.hash = undefined;
     dumps['tx'] = ParamsFormatter.toRawTransaction(tx)
 
     for (const input of tx.inputs) {
@@ -46,14 +47,14 @@ export async function txDump(tx: Transaction, path: string) {
             let cellDepGroup = molecule.vector(blockchain.OutPoint).unpack(currentData);
             for (const cellDepItem of cellDepGroup) {
                 let currentTx = await rpc.getTransaction(cellDepItem.txHash)
-                let currentOutput = currentTx.transaction.outputs[cellDepItem.index]
-                let currentData = currentTx.transaction.outputsData[cellDepItem.index]
+                let currentOutput = currentTx.transaction.outputs[parseInt(cellDepItem.index, 16)]
+                let currentData = currentTx.transaction.outputsData[parseInt(cellDepItem.index, 16)]
                 let currentHeader = currentTx.txStatus.blockHash;
                 dumps['mock_info']['cell_deps'].push({
                     cell_dep: ParamsFormatter.toCellDep({
                         outPoint: {
                             txHash: cellDepItem.txHash,
-                            index: '0x' + cellDepItem.index.toString(16)
+                            index: cellDepItem.index
                         },
                         depType: "code",
                     }),
